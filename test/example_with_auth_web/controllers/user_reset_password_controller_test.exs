@@ -46,7 +46,14 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
     setup %{user: user} do
       token =
         extract_user_token(fn url ->
-          Accounts.deliver_user_reset_password_instructions(user, url)
+          {:ok,
+           user
+           |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
+             reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
+           )
+           |> Accounts.Api.update!()
+           |> Map.get(:__metadata__)
+           |> Map.get(:token)}
         end)
 
       %{token: token}
@@ -68,7 +75,14 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
     setup %{user: user} do
       token =
         extract_user_token(fn url ->
-          Accounts.deliver_user_reset_password_instructions(user, url)
+          {:ok,
+           user
+           |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
+             reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
+           )
+           |> Accounts.Api.update!()
+           |> Map.get(:__metadata__)
+           |> Map.get(:token)}
         end)
 
       %{token: token}
@@ -86,7 +100,13 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
       assert redirected_to(conn) == Routes.user_session_path(conn, :new)
       refute get_session(conn, :user_token)
       assert get_flash(conn, :info) =~ "Password reset successfully"
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+
+      assert Accounts.User
+             |> Ash.Query.for_read(:by_email_and_password, %{
+               email: user.email,
+               password: "new valid password"
+             })
+             |> Accounts.Api.read_one!()
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do

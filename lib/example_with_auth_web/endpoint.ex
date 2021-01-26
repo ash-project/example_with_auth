@@ -7,7 +7,7 @@ defmodule ExampleWithAuthWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_example_with_auth_key",
-    signing_salt: "Z3LQsxTb"
+    signing_salt: "n9Usra1J"
   ]
 
   socket "/socket", ExampleWithAuthWeb.UserSocket,

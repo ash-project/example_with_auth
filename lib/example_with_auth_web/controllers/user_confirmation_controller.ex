@@ -2,17 +2,25 @@ defmodule ExampleWithAuthWeb.UserConfirmationController do
   use ExampleWithAuthWeb, :controller
 
   alias ExampleWithAuth.Accounts
+  require Ash.Query
 
   def new(conn, _params) do
     render(conn, "new.html")
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.get_user_by_email(email) do
-      Accounts.deliver_user_confirmation_instructions(
-        user,
-        &Routes.user_confirmation_url(conn, :confirm, &1)
-      )
+    user =
+      ExampleWithAuth.Accounts.User
+      |> Ash.Query.filter(email == ^email)
+      |> ExampleWithAuth.Accounts.Api.read_one!()
+
+    if user do
+      user
+      |> Ash.Changeset.new()
+      |> Ash.Changeset.for_update(:deliver_user_confirmation_instructions, %{
+        confirmation_url_fun: &Routes.user_confirmation_url(conn, :confirm, &1)
+      })
+      |> Accounts.Api.update!()
     end
 
     # Regardless of the outcome, show an impartial success/error message.
@@ -28,7 +36,29 @@ defmodule ExampleWithAuthWeb.UserConfirmationController do
   # Do not log in the user after confirmation to avoid a
   # leaked token giving the user access to the account.
   def confirm(conn, %{"token" => token}) do
-    case Accounts.confirm_user(token) do
+    result =
+      ExampleWithAuth.Accounts.User
+      |> Ash.Query.for_read(:with_verified_email_token, token: token, context: "confirm")
+      |> ExampleWithAuth.Accounts.Api.read_one()
+      |> case do
+        {:ok, user} when not is_nil(user) ->
+          user
+          |> Ash.Changeset.new()
+          |> Ash.Changeset.for_update(:confirm, %{delete_confirm_tokens: true, token: token})
+          |> ExampleWithAuth.Accounts.Api.update()
+          |> case do
+            {:ok, user} ->
+              {:ok, user}
+
+            _ ->
+              :error
+          end
+
+        _ ->
+          :error
+      end
+
+    case result do
       {:ok, _} ->
         conn
         |> put_flash(:info, "Account confirmed successfully.")

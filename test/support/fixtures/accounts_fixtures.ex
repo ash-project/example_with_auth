@@ -8,15 +8,16 @@ defmodule ExampleWithAuth.AccountsFixtures do
   def valid_user_password, do: "hello world!"
 
   def user_fixture(attrs \\ %{}) do
-    {:ok, user} =
-      attrs
-      |> Enum.into(%{
+    params =
+      Enum.into(attrs, %{
         email: unique_user_email(),
         password: valid_user_password()
       })
-      |> ExampleWithAuth.Accounts.register_user()
 
-    user
+    ExampleWithAuth.Accounts.User
+    |> Ash.Changeset.new()
+    |> Ash.Changeset.for_create(:register, params)
+    |> ExampleWithAuth.Accounts.Api.create!()
   end
 
   def extract_user_token(fun) do

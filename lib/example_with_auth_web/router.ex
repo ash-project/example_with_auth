@@ -90,11 +90,11 @@ defmodule ExampleWithAuthWeb.Router do
     get "/users/confirm/:token", UserConfirmationController, :confirm
   end
 
-  if Mix.env == :dev do
+  if Mix.env() == :dev do
     forward "/sent_emails", Bamboo.SentEmailViewerPlug
   end
 
-  if Mix.env == :dev do
+  if Mix.env() == :dev do
     forward "/graphiql", Absinthe.Plug.GraphiQL, schema: ExampleWithAuthWeb.Schema
   end
 end

@@ -1,5 +1,6 @@
 defmodule ExampleWithAuth.MixProject do
   use Mix.Project
+
   def project do
     [
       app: :example_with_auth,
@@ -12,6 +13,7 @@ defmodule ExampleWithAuth.MixProject do
       deps: deps()
     ]
   end
+
   # Configuration for the OTP application.
   #
   # Type `mix help compile.app` for more information.
@@ -21,6 +23,7 @@ defmodule ExampleWithAuth.MixProject do
       extra_applications: [:logger, :runtime_tools]
     ]
   end
+
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
@@ -29,6 +32,10 @@ defmodule ExampleWithAuth.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash, path: "../../ash/ash", override: true},
+      {:ash_postgres, path: "../../ash/ash_postgres"},
+      {:ash_phoenix, path: "../../ash/ash_phoenix"},
+
       # Absinthe for GraphQL
       {:absinthe, "~> 1.5.0"},
       {:absinthe_plug, "~> 1.5.0"},
@@ -37,7 +44,6 @@ defmodule ExampleWithAuth.MixProject do
       {:bamboo, "~> 1.5"},
       {:premailex, "~> 0.3.0"},
       {:floki, ">= 0.0.0"},
-
       {:guardian, "~> 2.0"},
       {:bcrypt_elixir, "~> 2.0"},
       {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false},
@@ -58,6 +64,7 @@ defmodule ExampleWithAuth.MixProject do
       {:plug_cowboy, "~> 2.0"}
     ]
   end
+
   # Aliases are shortcuts or tasks specific to the current project.
   # For example, to install project dependencies and perform other setup tasks, run:
   #

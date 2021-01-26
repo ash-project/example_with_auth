@@ -10,13 +10,16 @@ use Mix.Config
 config :example_with_auth,
   ecto_repos: [ExampleWithAuth.Repo]
 
+config :example_with_auth,
+  ash_apis: [ExampleWithAuth.Accounts.Api]
+
 # Configures the endpoint
 config :example_with_auth, ExampleWithAuthWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "zH+i/4Rk7RXjaeItTjeMzBNAxjhKOJ8kPgGM7a5hx5WtTogcH0KEwJw/Y2pDG2N2",
+  secret_key_base: "mbJ8gxmtYcut5LIz3CIXu4WXBYpwcSmyLEGptUUkG8vyYACci5Wvp/234kw2Is2h",
   render_errors: [view: ExampleWithAuthWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: ExampleWithAuth.PubSub,
-  live_view: [signing_salt: "e10fhbO+"]
+  live_view: [signing_salt: "I4QqCgpk"]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -28,7 +31,7 @@ config :phoenix, :json_library, Jason
 
 config :example_with_auth, ExampleWithAuth.Guardian,
   issuer: "example_with_auth",
-  secret_key: "P4zZo/H2FayqpKf5jkxTqXNby6CjjR1/aufKqId6mYBc7LgP2c0bV7RZvXaJE2bSHRg=",
+  secret_key: "iUXeGupca2+gzm0KgfuWdSzH66v8Br48FSLTn2l2QEXcpbBxcVsJHvoiD5fRfkLbuHc=",
   ttl: {3, :days}
 
 config :example_with_auth, ExampleWithAuthWeb.AuthAccessPipeline,

@@ -60,7 +60,12 @@ defmodule ExampleWithAuthWeb.ConnCase do
   It returns an updated `conn`.
   """
   def log_in_user(conn, user) do
-    token = ExampleWithAuth.Accounts.generate_user_session_token(user)
+    token =
+      Accounts.UserToken
+      |> Ash.Changeset.new()
+      |> Ash.Changeset.for_create(:build_session_token, user: user)
+      |> Accounts.Api.create!()
+      |> Map.get(:token)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})

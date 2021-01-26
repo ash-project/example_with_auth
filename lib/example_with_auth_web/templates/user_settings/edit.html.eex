@@ -8,11 +8,13 @@
         <h4>Change e-mail</h4>
 
         <%= form_for @email_changeset, Routes.user_settings_path(@conn, :update), fn f -> %>
-          <%= if @email_changeset.action do %>
+          <%= if @email_changeset.action_failed? do %>
             <div class="alert alert-danger">
               <p>Oops, something went wrong! Please check the errors below.</p>
             </div>
           <% end %>
+
+          <%= hidden_input f, :action, name: "action", value: "update_email" %>
 
           <div class="mb-6">
             <%= label f, :email, class: "form-label" %>
@@ -34,11 +36,14 @@
         <h4>Change password</h4>
 
         <%= form_for @password_changeset, Routes.user_settings_path(@conn, :update), fn f -> %>
-          <%= if @password_changeset.action do %>
+          <%= if @password_changeset.action_failed? do %>
             <div class="alert alert-danger">
               <p>Oops, something went wrong! Please check the errors below.</p>
             </div>
           <% end %>
+
+          <%= hidden_input f, :action, name: "action", value: "update_password" %>
+
 
           <div class="mb-6">
             <%= label f, :password, "New password", class: "form-label" %>

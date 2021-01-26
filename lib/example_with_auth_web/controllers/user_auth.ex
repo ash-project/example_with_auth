@@ -4,6 +4,7 @@ defmodule ExampleWithAuthWeb.UserAuth do
 
   alias ExampleWithAuth.Accounts
   alias ExampleWithAuthWeb.Router.Helpers, as: Routes
+  require Ash.Query
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -25,7 +26,13 @@ defmodule ExampleWithAuthWeb.UserAuth do
   if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
-    token = Accounts.generate_user_session_token(user)
+    token =
+      Accounts.UserToken
+      |> Ash.Changeset.new()
+      |> Ash.Changeset.for_create(:build_session_token, %{user: user})
+      |> Accounts.Api.create!()
+      |> Map.get(:token)
+
     user_return_to = get_session(conn, :user_return_to)
 
     conn
@@ -72,7 +79,15 @@ defmodule ExampleWithAuthWeb.UserAuth do
   """
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
-    user_token && Accounts.delete_session_token(user_token)
+
+    if user_token do
+      {:ok, query} =
+        ExampleWithAuth.Accounts.UserToken
+        |> Ash.Query.filter(token == ^user_token and context == "session")
+        |> Ash.Query.data_layer_query()
+
+      ExampleWithAuth.Repo.delete_all(query)
+    end
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       ExampleWithAuthWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
@@ -90,7 +105,14 @@ defmodule ExampleWithAuthWeb.UserAuth do
   """
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
-    user = user_token && Accounts.get_user_by_session_token(user_token)
+
+    user =
+      if user_token do
+        ExampleWithAuth.Accounts.User
+        |> Ash.Query.for_read(:by_token, token: user_token, context: "session")
+        |> ExampleWithAuth.Accounts.Api.read_one!()
+      end
+
     assign(conn, :current_user, user)
   end
 
@@ -111,7 +133,7 @@ defmodule ExampleWithAuthWeb.UserAuth do
   @doc """
   Used for routes that require the user to not be authenticated.
   """
-  def redirect_if_user_is_authenticated(conn, _opts) do
+  def redirect_if_user_is_authenticated(conn, opts) do
     if conn.assigns[:current_user] do
       conn
       |> redirect(to: signed_in_path(conn))

@@ -11,17 +11,20 @@ defmodule ExampleWithAuthWeb.UserSettingsController do
   end
 
   def update(conn, %{"action" => "update_email"} = params) do
-    %{"current_password" => password, "user" => user_params} = params
-    user = conn.assigns.current_user
-
-    case Accounts.apply_user_email(user, password, user_params) do
-      {:ok, applied_user} ->
-        Accounts.deliver_update_email_instructions(
-          applied_user,
-          user.email,
-          &Routes.user_settings_url(conn, :confirm_email, &1)
-        )
-
+    conn.assigns.current_user
+    |> Ash.Changeset.new()
+    |> Ash.Changeset.set_argument(
+      :update_url_fun,
+      &Routes.user_settings_url(conn, :confirm_email, &1)
+    )
+    |> Ash.Changeset.set_argument(:current_password, params["current_password"])
+    |> Ash.Changeset.for_update(
+      :deliver_update_email_instructions,
+      params["user"]
+    )
+    |> Accounts.Api.update()
+    |> case do
+      {:ok, _user} ->
         conn
         |> put_flash(
           :info,
@@ -29,35 +32,41 @@ defmodule ExampleWithAuthWeb.UserSettingsController do
         )
         |> redirect(to: Routes.user_settings_path(conn, :edit))
 
-      {:error, changeset} ->
+      {:error, %{changeset: changeset}} ->
         render(conn, "edit.html", email_changeset: changeset)
     end
   end
 
   def update(conn, %{"action" => "update_password"} = params) do
-    %{"current_password" => password, "user" => user_params} = params
-    user = conn.assigns.current_user
-
-    case Accounts.update_user_password(user, password, user_params) do
+    conn.assigns.current_user
+    |> Ash.Changeset.new()
+    |> Ash.Changeset.set_argument(:current_password, params["current_password"])
+    |> Ash.Changeset.for_update(:change_password, params["user"])
+    |> Accounts.Api.update()
+    |> case do
       {:ok, user} ->
         conn
         |> put_flash(:info, "Password updated successfully.")
         |> put_session(:user_return_to, Routes.user_settings_path(conn, :edit))
         |> UserAuth.log_in_user(user)
 
-      {:error, changeset} ->
+      {:error, %{changeset: changeset}} ->
         render(conn, "edit.html", password_changeset: changeset)
     end
   end
 
   def confirm_email(conn, %{"token" => token}) do
-    case Accounts.update_user_email(conn.assigns.current_user, token) do
-      :ok ->
+    conn.assigns.current_user
+    |> Ash.Changeset.new()
+    |> Ash.Changeset.for_update(:change_email, %{token: token})
+    |> ExampleWithAuth.Accounts.Api.update()
+    |> case do
+      {:ok, _} ->
         conn
         |> put_flash(:info, "Email changed successfully.")
         |> redirect(to: Routes.user_settings_path(conn, :edit))
 
-      :error ->
+      {:error, _} ->
         conn
         |> put_flash(:error, "Email change link is invalid or it has expired.")
         |> redirect(to: Routes.user_settings_path(conn, :edit))
@@ -68,7 +77,7 @@ defmodule ExampleWithAuthWeb.UserSettingsController do
     user = conn.assigns.current_user
 
     conn
-    |> assign(:email_changeset, Accounts.change_user_email(user))
-    |> assign(:password_changeset, Accounts.change_user_password(user))
+    |> assign(:email_changeset, Ash.Changeset.for_update(user, :change_email, %{}))
+    |> assign(:password_changeset, Ash.Changeset.for_update(user, :change_passowrd, %{}))
   end
 end
