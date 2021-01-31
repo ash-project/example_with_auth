@@ -32,9 +32,9 @@ defmodule ExampleWithAuth.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ash, path: "../../ash/ash", override: true},
-      {:ash_postgres, path: "../../ash/ash_postgres"},
-      {:ash_phoenix, path: "../../ash/ash_phoenix"},
+      {:ash, "~> 1.30"},
+      {:ash_postgres, "~> 0.33.1"},
+      {:ash_phoenix, "~> 0.2.0"},
 
       # Absinthe for GraphQL
       {:absinthe, "~> 1.5.0"},
