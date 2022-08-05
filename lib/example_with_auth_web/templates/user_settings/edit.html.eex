@@ -7,8 +7,8 @@
       <div class="card-body prose">
         <h4>Change e-mail</h4>
 
-        <%= form_for @email_changeset, Routes.user_settings_path(@conn, :update), fn f -> %>
-          <%= if @email_changeset.action_failed? do %>
+        <%= form_for @email_form, Routes.user_settings_path(@conn, :update), fn f -> %>
+          <%= if @email_form.submitted_once? do %>
             <div class="alert alert-danger">
               <p>Oops, something went wrong! Please check the errors below.</p>
             </div>
@@ -35,8 +35,8 @@
 
         <h4>Change password</h4>
 
-        <%= form_for @password_changeset, Routes.user_settings_path(@conn, :update), fn f -> %>
-          <%= if @password_changeset.action_failed? do %>
+        <%= form_for @password_form, Routes.user_settings_path(@conn, :update), fn f -> %>
+          <%= if @password_form.submitted_once? do %>
             <div class="alert alert-danger">
               <p>Oops, something went wrong! Please check the errors below.</p>
             </div>

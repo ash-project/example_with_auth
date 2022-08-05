@@ -3,8 +3,8 @@ defmodule ExampleWithAuth.Accounts.UserToken do
     data_layer: AshPostgres.DataLayer,
     notifiers: [ExampleWithAuth.Accounts.EmailNotifier]
 
-  alias ExampleWithAuth.Accounts.UserToken.Changes
-  alias ExampleWithAuth.Accounts.Preparations
+  alias ExampleWithAuth.Accounts.UserToken.Changes, warn: false
+  alias ExampleWithAuth.Accounts.Preparations, warn: false
 
   postgres do
     table "user_tokens"
@@ -16,7 +16,7 @@ defmodule ExampleWithAuth.Accounts.UserToken do
   end
 
   actions do
-    read :default, primary?: true
+    defaults [:read]
 
     read :verify_email_token do
       argument :token, :url_encoded_binary, allow_nil?: false
@@ -24,25 +24,28 @@ defmodule ExampleWithAuth.Accounts.UserToken do
       prepare Preparations.SetHashedToken
       prepare Preparations.DetermineDaysForToken
 
-      filter(
-        expr do
-          token == ^context(:hashed_token) and context == ^arg(:context) and
-            created_at > ago(^context(:days_for_token), :day)
-        end
-      )
+      filter expr(
+               token == ^context(:hashed_token) and context == ^arg(:context) and
+                 created_at > ago(^context(:days_for_token), :day)
+             )
     end
 
     create :build_session_token do
       primary? true
-      accept [:user]
 
+      argument :user, :map
+
+      change manage_relationship(:user, type: :replace)
       change set_attribute(:context, "session")
       change Changes.BuildSessionToken
     end
 
     create :build_email_token do
-      accept [:sent_to, :context, :user]
+      accept [:sent_to, :context]
 
+      argument :user, :map
+
+      change manage_relationship(:user, type: :replace)
       change Changes.BuildHashedToken
     end
   end

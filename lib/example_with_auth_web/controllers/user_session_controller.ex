@@ -11,7 +11,7 @@ defmodule ExampleWithAuthWeb.UserSessionController do
   def create(conn, %{"user" => user_params}) do
     Accounts.User
     |> Ash.Query.for_read(:by_email_and_password, user_params)
-    |> Accounts.Api.read_one()
+    |> Accounts.read_one()
     |> case do
       {:ok, user} ->
         UserAuth.log_in_user(conn, user, user_params)

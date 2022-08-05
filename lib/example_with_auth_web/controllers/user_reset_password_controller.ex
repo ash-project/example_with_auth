@@ -10,13 +10,17 @@ defmodule ExampleWithAuthWeb.UserResetPasswordController do
   end
 
   def create(conn, %{"user" => %{"email" => email}}) do
-    if user = Accounts.Api.get(Accounts.User, email: email) do
-      user
-      |> Ash.Changeset.new()
-      |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
-        reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
-      )
-      |> Accounts.Api.update!()
+    case Accounts.get(Accounts.User, email: email) do
+      {:ok, user} ->
+        user
+        |> Ash.Changeset.new()
+        |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
+          reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
+        )
+        |> Accounts.update!()
+
+      {:error, _} ->
+        nil
     end
 
     # Regardless of the outcome, show an impartial success/error message.
@@ -30,7 +34,7 @@ defmodule ExampleWithAuthWeb.UserResetPasswordController do
 
   def edit(conn, _params) do
     render(conn, "edit.html",
-      changeset: Ash.Changeset.for_update(conn.assigns.user, :change_password, %{})
+      form: AshPhoenix.Form.for_update(conn.assigns.user, :change_password)
     )
   end
 
@@ -38,17 +42,17 @@ defmodule ExampleWithAuthWeb.UserResetPasswordController do
   # leaked token giving the user access to the account.
   def update(conn, %{"user" => user_params}) do
     conn.assigns.user
-    |> Ash.Changeset.new()
-    |> Ash.Changeset.for_update(:change_password, user_params)
-    |> Accounts.Api.update()
+    |> AshPhoenix.Form.for_update(:change_password, api: ExampleWithAuth.Accounts)
+    |> AshPhoenix.Form.validate(user_params)
+    |> AshPhoenix.Form.submit()
     |> case do
       {:ok, _} ->
         conn
         |> put_flash(:info, "Password reset successfully.")
         |> redirect(to: Routes.user_session_path(conn, :new))
 
-      {:error, %{changeset: changeset}} ->
-        render(conn, "edit.html", changeset: changeset)
+      {:error, form} ->
+        render(conn, "edit.html", form: form)
     end
   end
 
@@ -58,7 +62,7 @@ defmodule ExampleWithAuthWeb.UserResetPasswordController do
     user =
       Accounts.User
       |> Ash.Query.for_read(:by_token, token: token, context: "reset_password")
-      |> Accounts.Api.read_one!()
+      |> Accounts.read_one!()
 
     if user do
       conn |> assign(:user, user) |> assign(:token, token)

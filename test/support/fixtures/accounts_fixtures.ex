@@ -15,14 +15,7 @@ defmodule ExampleWithAuth.AccountsFixtures do
       })
 
     ExampleWithAuth.Accounts.User
-    |> Ash.Changeset.new()
     |> Ash.Changeset.for_create(:register, params)
-    |> ExampleWithAuth.Accounts.Api.create!()
-  end
-
-  def extract_user_token(fun) do
-    {:ok, captured} = fun.(&"[TOKEN]#{&1}[TOKEN]")
-    [_, token, _] = String.split(captured.body, "[TOKEN]")
-    token
+    |> ExampleWithAuth.Accounts.create!()
   end
 end

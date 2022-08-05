@@ -4,7 +4,7 @@ defmodule ExampleWithAuth.Accounts.User.Helpers do
   @change_email_validity_in_days 7
   @session_validity_in_days 60
 
-  def days_for_token("reset"), do: @reset_password_validity_in_days
+  def days_for_token("reset_password"), do: @reset_password_validity_in_days
   def days_for_token("confirm"), do: @confirm_validity_in_days
   def days_for_token("session"), do: @session_validity_in_days
   def days_for_token("change:" <> _), do: @change_email_validity_in_days

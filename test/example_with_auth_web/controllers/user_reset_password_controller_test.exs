@@ -45,16 +45,13 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
   describe "GET /users/reset_password/:token" do
     setup %{user: user} do
       token =
-        extract_user_token(fn url ->
-          {:ok,
-           user
-           |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
-             reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
-           )
-           |> Accounts.Api.update!()
-           |> Map.get(:__metadata__)
-           |> Map.get(:token)}
-        end)
+        user
+        |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
+          reset_password_url_fun: url_fun
+        )
+        |> Accounts.update!()
+        |> Map.get(:__metadata__)
+        |> Map.get(:token)
 
       %{token: token}
     end
@@ -74,16 +71,13 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
   describe "PUT /users/reset_password/:token" do
     setup %{user: user} do
       token =
-        extract_user_token(fn url ->
-          {:ok,
-           user
-           |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
-             reset_password_url_fun: &Routes.user_reset_password_url(conn, :edit, &1)
-           )
-           |> Accounts.Api.update!()
-           |> Map.get(:__metadata__)
-           |> Map.get(:token)}
-        end)
+        user
+        |> Ash.Changeset.for_update(:deliver_user_reset_password_instructions,
+          reset_password_url_fun: url_fun
+        )
+        |> Accounts.update!()
+        |> Map.get(:__metadata__)
+        |> Map.get(:token)
 
       %{token: token}
     end
@@ -106,7 +100,7 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
                email: user.email,
                password: "new valid password"
              })
-             |> Accounts.Api.read_one!()
+             |> Accounts.read_one!()
     end
 
     test "does not reset password on invalid data", %{conn: conn, token: token} do
@@ -120,8 +114,8 @@ defmodule ExampleWithAuthWeb.UserResetPasswordControllerTest do
 
       response = html_response(conn, 200)
       assert response =~ "Reset Password</h5>"
-      assert response =~ "should be at least 12 character(s)"
-      assert response =~ "does not match password"
+      assert response =~ "length must be greater than or equal to 12"
+      assert response =~ "Confirmation did not match value"
     end
 
     test "does not reset password with invalid token", %{conn: conn} do

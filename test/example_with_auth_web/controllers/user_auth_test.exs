@@ -25,7 +25,7 @@ defmodule ExampleWithAuthWeb.UserAuthTest do
 
       assert ExampleWithAuth.Accounts.User
              |> Ash.Query.for_read(:by_token, token: token, context: "session")
-             |> ExampleWithAuth.Accounts.Api.read_one!()
+             |> ExampleWithAuth.Accounts.read_one!()
     end
 
     test "clears everything previously stored in the session", %{conn: conn, user: user} do
@@ -54,7 +54,7 @@ defmodule ExampleWithAuthWeb.UserAuthTest do
         Accounts.UserToken
         |> Ash.Changeset.new()
         |> Ash.Changeset.for_create(:build_session_token, user: user)
-        |> Accounts.Api.create!()
+        |> Accounts.create!()
         |> Map.get(:token)
 
       conn =
@@ -69,9 +69,9 @@ defmodule ExampleWithAuthWeb.UserAuthTest do
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
       assert redirected_to(conn) == "/"
 
-      assert ExampleWithAuth.Accounts.User
+      refute ExampleWithAuth.Accounts.User
              |> Ash.Query.for_read(:by_token, token: user_token, context: "session")
-             |> ExampleWithAuth.Accounts.Api.read_one!()
+             |> ExampleWithAuth.Accounts.read_one!()
     end
 
     test "broadcasts to the given live_socket_id", %{conn: conn} do
@@ -102,7 +102,7 @@ defmodule ExampleWithAuthWeb.UserAuthTest do
         Accounts.UserToken
         |> Ash.Changeset.new()
         |> Ash.Changeset.for_create(:build_session_token, user: user)
-        |> Accounts.Api.create!()
+        |> Accounts.create!()
         |> Map.get(:token)
 
       conn = conn |> put_session(:user_token, user_token) |> UserAuth.fetch_current_user([])
@@ -130,7 +130,7 @@ defmodule ExampleWithAuthWeb.UserAuthTest do
         Accounts.UserToken
         |> Ash.Changeset.new()
         |> Ash.Changeset.for_create(:build_session_token, user: user)
-        |> Accounts.Api.create!()
+        |> Accounts.create!()
         |> Map.get(:token)
 
       conn = UserAuth.fetch_current_user(conn, [])

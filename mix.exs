@@ -32,9 +32,10 @@ defmodule ExampleWithAuth.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ash, path: "../../ash/ash", override: true},
-      {:ash_postgres, path: "../../ash/ash_postgres"},
-      {:ash_phoenix, path: "../../ash/ash_phoenix"},
+      # {:ash, github: "ash-project/ash", override: true},
+      {:ash, path: "../ash", override: true},
+      {:ash_postgres, github: "ash-project/ash_postgres"},
+      {:ash_phoenix, github: "ash-project/ash_phoenix"},
 
       # Absinthe for GraphQL
       {:absinthe, "~> 1.5.0"},
@@ -45,13 +46,12 @@ defmodule ExampleWithAuth.MixProject do
       {:premailex, "~> 0.3.0"},
       {:floki, ">= 0.0.0"},
       {:guardian, "~> 2.0"},
-      {:bcrypt_elixir, "~> 2.0"},
-      {:phx_gen_auth, "~> 0.6", only: [:dev], runtime: false},
+      {:bcrypt_elixir, "~> 3.0"},
       {:sobelow, "~> 0.8", only: :dev},
       {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
       {:phoenix, "~> 1.5.7"},
       {:phoenix_ecto, "~> 4.1"},
-      {:ecto_sql, "~> 3.4"},
+      {:ecto_sql, "~> 3.8"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_live_view, "~> 0.15.0"},
       {:phoenix_html, "~> 2.11"},
@@ -73,10 +73,8 @@ defmodule ExampleWithAuth.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "cmd npm install --prefix assets"],
-      "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
-      "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      setup: ["ash_postgres.create", "ash_postgres.migrate", "run priv/repo/seeds.exs"],
+      reset: ["ash_postgres.drop", "ash_postgres.setup"]
     ]
   end
 end

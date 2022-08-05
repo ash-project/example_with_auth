@@ -1,6 +1,6 @@
 <h5 class="px-5 pb-2 text-lg leading-normal text-center">Register</h5>
-<%= form_for @changeset, Routes.user_registration_path(@conn, :create), fn f -> %>
-  <%= if @changeset.action_failed? do %>
+<%= form_for @form, Routes.user_registration_path(@conn, :create), fn f -> %>
+  <%= if @form.submitted_once? do %>
     <div class="alert alert-danger">
       <small>Oops, something went wrong! Please check the errors below.</small>
     </div>

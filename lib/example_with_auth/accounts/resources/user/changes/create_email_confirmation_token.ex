@@ -15,7 +15,7 @@ defmodule ExampleWithAuth.Accounts.User.Changes.CreateEmailConfirmationToken do
         sent_to: user.email,
         user: user
       )
-      |> ExampleWithAuth.Accounts.Api.create(return_notifications?: true)
+      |> ExampleWithAuth.Accounts.create(return_notifications?: true)
       |> case do
         {:ok, email_token, notifications} ->
           # notification = Ash.Notifier.Notification.new(ExampleWithAuth.Accounts.User, )

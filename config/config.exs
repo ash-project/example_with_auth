@@ -11,7 +11,10 @@ config :example_with_auth,
   ecto_repos: [ExampleWithAuth.Repo]
 
 config :example_with_auth,
-  ash_apis: [ExampleWithAuth.Accounts.Api]
+  ash_apis: [ExampleWithAuth.Accounts]
+
+config :example_with_auth, ExampleWithAuth.Accounts,
+  resources: [registry: ExampleWithAuth.Accounts.Registry]
 
 # Configures the endpoint
 config :example_with_auth, ExampleWithAuthWeb.Endpoint,

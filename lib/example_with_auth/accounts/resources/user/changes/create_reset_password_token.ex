@@ -15,7 +15,7 @@ defmodule ExampleWithAuth.Accounts.User.Changes.CreateResetPasswordToken do
         sent_to: user.email,
         user: user
       )
-      |> ExampleWithAuth.Accounts.Api.create(return_notifications?: true)
+      |> ExampleWithAuth.Accounts.create(return_notifications?: true)
       |> case do
         {:ok, email_token, notifications} ->
           {:ok, %{user | __metadata__: Map.put(user.__metadata__, :token, email_token.token)},

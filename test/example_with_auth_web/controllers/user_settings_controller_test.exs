@@ -41,7 +41,7 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
                email: user.email,
                password: "new valid password"
              })
-             |> Accounts.Api.read_one!()
+             |> Accounts.read_one!()
     end
 
     test "does not update password on invalid data", %{conn: conn} do
@@ -57,9 +57,9 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
 
       response = html_response(old_password_conn, 200)
       assert response =~ "Settings</h5>"
-      assert response =~ "should be at least 12 character(s)"
-      assert response =~ "does not match password"
-      assert response =~ "is not valid"
+      assert response =~ "length must be greater than or equal to 12"
+      assert response =~ "Confirmation did not match value"
+      assert response =~ "errors below"
 
       assert get_session(old_password_conn, :user_token) == get_session(conn, :user_token)
     end
@@ -78,7 +78,7 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
       assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
       assert get_flash(conn, :info) =~ "A link to confirm your email"
 
-      assert Accounts.Api.get!(Accounts.User,
+      assert Accounts.get!(Accounts.User,
                email: user.email
              )
     end
@@ -94,7 +94,6 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
       response = html_response(conn, 200)
       assert response =~ "Settings</h5>"
       assert response =~ "must have the @ sign and no spaces"
-      assert response =~ "is not valid"
     end
   end
 
@@ -103,14 +102,15 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
       email = unique_user_email()
 
       token =
-        extract_user_token(fn url ->
-          {:ok,
-           conn.assigns.current_user
-           |> Ash.Changeset.for_update(:deliver_update_email_instructions, params)
-           |> Accounts.Api.update!()
-           |> Map.get(:__metadata__)
-           |> Map.get(:token)}
-        end)
+        user
+        |> Ash.Changeset.for_update(:deliver_update_email_instructions, %{
+          email: "foo@bar.com",
+          current_password: valid_user_password(),
+          update_url_fun: & &1
+        })
+        |> Accounts.update!()
+        |> Map.get(:__metadata__)
+        |> Map.get(:token)
 
       %{token: token, email: email}
     end
@@ -120,9 +120,9 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
       assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
       assert get_flash(conn, :info) =~ "Email changed successfully"
 
-      refute Accounts.Api.get!(Accounts.User, email: user.email)
+      refute Accounts.get!(Accounts.User, email: user.email)
 
-      assert Accounts.Api.get!(Accounts.User, email: email)
+      assert Accounts.get!(Accounts.User, email: email)
 
       conn = get(conn, Routes.user_settings_path(conn, :confirm_email, token))
       assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
@@ -134,7 +134,7 @@ defmodule ExampleWithAuthWeb.UserSettingsControllerTest do
       assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
       assert get_flash(conn, :error) =~ "Email change link is invalid or it has expired"
 
-      assert Accounts.Api.get!(Accounts.User, email: user.email)
+      assert Accounts.get!(Accounts.User, email: user.email)
     end
 
     test "redirects if user is not logged in", %{token: token} do

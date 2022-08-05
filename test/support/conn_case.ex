@@ -61,10 +61,10 @@ defmodule ExampleWithAuthWeb.ConnCase do
   """
   def log_in_user(conn, user) do
     token =
-      Accounts.UserToken
+      ExampleWithAuth.Accounts.UserToken
       |> Ash.Changeset.new()
       |> Ash.Changeset.for_create(:build_session_token, user: user)
-      |> Accounts.Api.create!()
+      |> ExampleWithAuth.Accounts.create!()
       |> Map.get(:token)
 
     conn

@@ -48,7 +48,7 @@ defmodule ExampleWithAuthWeb.UserRegistrationControllerTest do
       response = html_response(conn, 200)
       assert response =~ "Register</h5>"
       assert response =~ "must have the @ sign and no spaces"
-      assert response =~ "should be at least 12 character"
+      assert response =~ "length must be greater than or equal to 12"
     end
   end
 end

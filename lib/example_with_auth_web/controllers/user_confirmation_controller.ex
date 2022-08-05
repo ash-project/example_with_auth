@@ -12,7 +12,7 @@ defmodule ExampleWithAuthWeb.UserConfirmationController do
     user =
       ExampleWithAuth.Accounts.User
       |> Ash.Query.filter(email == ^email)
-      |> ExampleWithAuth.Accounts.Api.read_one!()
+      |> ExampleWithAuth.Accounts.read_one!()
 
     if user do
       user
@@ -20,7 +20,7 @@ defmodule ExampleWithAuthWeb.UserConfirmationController do
       |> Ash.Changeset.for_update(:deliver_user_confirmation_instructions, %{
         confirmation_url_fun: &Routes.user_confirmation_url(conn, :confirm, &1)
       })
-      |> Accounts.Api.update!()
+      |> Accounts.update()
     end
 
     # Regardless of the outcome, show an impartial success/error message.
@@ -39,13 +39,13 @@ defmodule ExampleWithAuthWeb.UserConfirmationController do
     result =
       ExampleWithAuth.Accounts.User
       |> Ash.Query.for_read(:with_verified_email_token, token: token, context: "confirm")
-      |> ExampleWithAuth.Accounts.Api.read_one()
+      |> ExampleWithAuth.Accounts.read_one()
       |> case do
         {:ok, user} when not is_nil(user) ->
           user
           |> Ash.Changeset.new()
           |> Ash.Changeset.for_update(:confirm, %{delete_confirm_tokens: true, token: token})
-          |> ExampleWithAuth.Accounts.Api.update()
+          |> ExampleWithAuth.Accounts.update()
           |> case do
             {:ok, user} ->
               {:ok, user}

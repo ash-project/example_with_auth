@@ -30,7 +30,7 @@ defmodule ExampleWithAuthWeb.UserAuth do
       Accounts.UserToken
       |> Ash.Changeset.new()
       |> Ash.Changeset.for_create(:build_session_token, %{user: user})
-      |> Accounts.Api.create!()
+      |> Accounts.create!()
       |> Map.get(:token)
 
     user_return_to = get_session(conn, :user_return_to)
@@ -110,7 +110,7 @@ defmodule ExampleWithAuthWeb.UserAuth do
       if user_token do
         ExampleWithAuth.Accounts.User
         |> Ash.Query.for_read(:by_token, token: user_token, context: "session")
-        |> ExampleWithAuth.Accounts.Api.read_one!()
+        |> ExampleWithAuth.Accounts.read_one!()
       end
 
     assign(conn, :current_user, user)
@@ -133,7 +133,7 @@ defmodule ExampleWithAuthWeb.UserAuth do
   @doc """
   Used for routes that require the user to not be authenticated.
   """
-  def redirect_if_user_is_authenticated(conn, opts) do
+  def redirect_if_user_is_authenticated(conn, _opts) do
     if conn.assigns[:current_user] do
       conn
       |> redirect(to: signed_in_path(conn))

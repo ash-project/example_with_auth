@@ -8,6 +8,5 @@ module.exports = {
     options: {
       whitelist: []
     }
-  },
-  plugins: [require("kutty")]
+  }
 }

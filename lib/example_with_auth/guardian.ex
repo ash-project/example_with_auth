@@ -10,7 +10,7 @@ defmodule ExampleWithAuth.Guardian do
 
   def resource_from_claims(claims) do
     id = claims["sub"]
-    resource = Accounts.Api.get!(Accounts.User, id)
+    resource = Accounts.get!(Accounts.User, id)
 
     {:ok, resource}
   end

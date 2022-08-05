@@ -2,10 +2,10 @@ defmodule ExampleWithAuth.Accounts.User do
   use Ash.Resource,
     data_layer: AshPostgres.DataLayer
 
-  alias ExampleWithAuth.Accounts.Preparations
-  alias ExampleWithAuth.Accounts.User.Preparations, as: UserPreparations
-  alias ExampleWithAuth.Accounts.User.Changes
-  alias ExampleWithAuth.Accounts.User.Validations
+  alias ExampleWithAuth.Accounts.Preparations, warn: false
+  alias ExampleWithAuth.Accounts.User.Preparations, as: UserPreparations, warn: false
+  alias ExampleWithAuth.Accounts.User.Changes, warn: false
+  alias ExampleWithAuth.Accounts.User.Validations, warn: false
 
   identities do
     identity :unique_email, [:email]
@@ -17,7 +17,7 @@ defmodule ExampleWithAuth.Accounts.User do
   end
 
   actions do
-    read :default, primary?: true
+    defaults [:read]
 
     read :by_email_and_password do
       argument :email, :string, allow_nil?: false, sensitive?: true
@@ -33,12 +33,10 @@ defmodule ExampleWithAuth.Accounts.User do
       argument :context, :string, allow_nil?: false
       prepare Preparations.DetermineDaysForToken
 
-      filter(
-        expr do
-          token.token == ^arg(:token) and token.context == ^arg(:context) and
-            token.created_at > ago(^context(:days_for_token), :day)
-        end
-      )
+      filter expr(
+               token.token == ^arg(:token) and token.context == ^arg(:context) and
+                 token.created_at > ago(^context(:days_for_token), :day)
+             )
     end
 
     read :with_verified_email_token do
@@ -48,13 +46,11 @@ defmodule ExampleWithAuth.Accounts.User do
       prepare Preparations.SetHashedToken
       prepare Preparations.DetermineDaysForToken
 
-      filter(
-        expr do
-          token.created_at > ago(^context(:days_for_token), :day) and
-            token.token == ^context(:hashed_token) and token.context == ^arg(:context) and
-            token.sent_to == email
-        end
-      )
+      filter expr(
+               token.created_at > ago(^context(:days_for_token), :day) and
+                 token.token == ^context(:hashed_token) and token.context == ^arg(:context) and
+                 token.sent_to == email
+             )
     end
 
     create :register do
@@ -68,10 +64,6 @@ defmodule ExampleWithAuth.Accounts.User do
         ]
 
       change Changes.HashPassword
-    end
-
-    update :default do
-      primary? true
     end
 
     update :deliver_user_confirmation_instructions do

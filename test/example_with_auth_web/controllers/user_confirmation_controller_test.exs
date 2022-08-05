@@ -6,8 +6,8 @@ defmodule ExampleWithAuthWeb.UserConfirmationControllerTest do
   import ExampleWithAuth.AccountsFixtures
 
   setup do
-    {user, org} = user_fixture()
-    %{user: user, org: org}
+    user = user_fixture()
+    %{user: user}
   end
 
   describe "GET /users/confirm" do
@@ -32,7 +32,9 @@ defmodule ExampleWithAuthWeb.UserConfirmationControllerTest do
     end
 
     test "does not send confirmation token if account is confirmed", %{conn: conn, user: user} do
-      Repo.update!(Accounts.User.confirm_changeset(user))
+      user
+      |> Ash.Changeset.for_update(:confirm)
+      |> Accounts.update!()
 
       conn =
         post(conn, Routes.user_confirmation_path(conn, :create), %{
@@ -59,23 +61,19 @@ defmodule ExampleWithAuthWeb.UserConfirmationControllerTest do
   describe "GET /users/confirm/:token" do
     test "confirms the given token once", %{conn: conn, user: user} do
       token =
-        extract_user_token(fn url ->
-          {:ok,
-           user
-           |> Ash.Changeset.new()
-           |> Ash.Changeset.for_update(:deliver_user_confirmation_instructions, %{
-             confirmation_url_fun: &Routes.user_confirmation_url(conn, :confirm, &1)
-           })
-           |> Accounts.Api.update!()
-           |> Map.get(:__metadata__)
-           |> Map.get(:token)}
-        end)
+        user
+        |> Ash.Changeset.for_update(:deliver_user_confirmation_instructions, %{
+          confirmation_url_fun: url_fun
+        })
+        |> Accounts.update!()
+        |> Map.get(:__metadata__)
+        |> Map.get(:token)
 
       conn = get(conn, Routes.user_confirmation_path(conn, :confirm, token))
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :info) =~ "Account confirmed successfully"
 
-      assert Accounts.Api.get!(Accounts.User, user.id).confirmed_at
+      assert Accounts.get!(Accounts.User, user.id).confirmed_at
 
       refute get_session(conn, :user_token)
       assert Repo.all(Accounts.UserToken) == []
@@ -100,7 +98,7 @@ defmodule ExampleWithAuthWeb.UserConfirmationControllerTest do
       assert redirected_to(conn) == "/"
       assert get_flash(conn, :error) =~ "Account confirmation link is invalid or it has expired"
 
-      assert Accounts.Api.get!(Accounts.User, user.id).confirmed_at
+      refute Accounts.get!(Accounts.User, user.id).confirmed_at
     end
   end
 end
